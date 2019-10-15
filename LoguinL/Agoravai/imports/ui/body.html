@@ -1,0 +1,43 @@
+<body>
+
+  <div class="container">
+
+    <header>
+
+      <h1>&MPRESA - Mensagens({{incompleteCount}})</h1>
+
+      <label class="hide-completed">
+
+        <input type="checkbox" />
+
+        Ocultar mensagens
+
+      </label>
+
+      {{> loginButtons}}
+
+      {{#if currentUser}}
+
+      <form class="new-task">
+
+        <input type="text" name="text" placeholder="Qual a boa meu bom?" />
+
+      </form>
+      {{/if}}
+    </header>
+
+
+
+    <ul>
+
+      {{#each tasks}}
+
+        {{> task}}
+
+      {{/each}}
+
+    </ul>
+
+  </div>
+
+</body>
