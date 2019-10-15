@@ -1,124 +1,38 @@
-i
-
 import { Meteor } from 'meteor/meteor';
 
-import { Mongo } from 'meteor/mongo';
+import { Template } from 'meteor/templating';
 
-import { check } from 'meteor/check';
+import './task.html';
 
+Template.task.helpers({
 
+  isOwner() {
 
-export const Tasks = new Mongo.Collection('tasks');
-
-if (Meteor.isServer) {
-
-  // This code only runs on the server
-
-  // Only publish tasks that are public or belong to the current user
-
-  Meteor.publish('tasks', function tasksPublication() {
-
-    return Tasks.find({
-
-      $or: [
-
-        { private: { $ne: true } },
-
-        { owner: this.userId },
-
-      ],
-
-    });
-
-  });
-
-}
-
-Meteor.methods({
-
-  'tasks.insert'(text) {
-
-    check(text, String);
-
-    // Make sure the user is logged in before inserting a task
-
-    if (! Meteor.userId()) {
-
-      throw new Meteor.Error('not-authorized');
-
-    }
-
-    Tasks.insert({
-
-      text,
-
-      createdAt: new Date(),
-
-      owner: Meteor.userId(),
-
-      username: Meteor.user().username,
-
-    });
+    return this.owner === Meteor.userId();
 
   },
 
-  'tasks.remove'(taskId) {
+});
 
-  check(taskId, String);
+Template.task.events({
 
-  const task = Tasks.findOne(taskId);
+  'click .toggle-checked'() {
 
-  if (task.private && task.owner !== Meteor.userId()) {
+    // Set the checked property to the opposite of its current value
 
-    // If the task is private, make sure only the owner can delete it
+    Meteor.call('tasks.setChecked', this._id, !this.checked);
 
-    throw new Meteor.Error('not-authorized');
+  },
+  'click .delete'() {
 
-  }
-
-  Tasks.remove(taskId);
+    Meteor.call('tasks.remove', this._id);
 
   },
 
-  'tasks.setChecked'(taskId, setChecked) {
+  'click .toggle-private'() {
 
-  check(taskId, String);
-
-  check(setChecked, Boolean);
-
-  const task = Tasks.findOne(taskId);
-
-  if (task.private && task.owner !== Meteor.userId()) {
-
-    // If the task is private, make sure only the owner can check it off
-
-    throw new Meteor.Error('not-authorized');
-
-  }
-
-  Tasks.update(taskId, { $set: { checked: setChecked } });
+    Meteor.call('tasks.setPrivate', this._id, !this.private);
 
   },
-
-  'tasks.setPrivate'(taskId, setToPrivate) {
-
-  check(taskId, String);
-
-  check(setToPrivate, Boolean);
-
-
-  const task = Tasks.findOne(taskId);
-
-  // Make sure only the task owner can make a task private
-
-  if (task.owner !== Meteor.userId()) {
-
-    throw new Meteor.Error('not-authorized');
-
-  }
-
-  Tasks.update(taskId, { $set: { private: setToPrivate } });
-
-},
 
 });
